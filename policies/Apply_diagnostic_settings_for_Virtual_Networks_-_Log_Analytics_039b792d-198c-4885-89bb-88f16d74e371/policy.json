@@ -1,0 +1,116 @@
+{
+ "properties": {
+  "displayName": "Apply diagnostic settings for Virtual Networks - Log Analytics",
+  "policyType": "Custom",
+  "mode": "All",
+  "description": "This policy automatically deploys and enable diagnostic settings to Log Analytics",
+  "metadata": {
+   "category": "Monitoring",
+   "createdBy": "e2c5fc93-1ff5-4360-9ec4-9aae23f840e3",
+   "createdOn": "2022-06-01T03:08:42.9183289Z",
+   "updatedBy": "e2c5fc93-1ff5-4360-9ec4-9aae23f840e3",
+   "updatedOn": "2022-06-01T17:12:27.9877906Z"
+  },
+  "parameters": {
+   "logAnalytics": {
+    "type": "String",
+    "metadata": {
+     "displayName": "Log Analytics workspace",
+     "description": "Select the Log Analytics workspace from dropdown list",
+     "strongType": "omsWorkspace"
+    }
+   }
+  },
+  "policyRule": {
+   "if": {
+    "allOf": [
+     {
+      "field": "type",
+      "equals": "Microsoft.Network/virtualNetworks"
+     }
+    ]
+   },
+   "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+     "type": "Microsoft.Insights/diagnosticSettings",
+     "name": "setbypolicy",
+     "roleDefinitionIds": [
+      "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+     ],
+     "existenceCondition": {
+      "allOf": [
+       {
+        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+        "equals": "True"
+       },
+       {
+        "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+        "matchInsensitively": "[parameters('logAnalytics')]"
+       }
+      ]
+     },
+     "deployment": {
+      "properties": {
+       "mode": "incremental",
+       "template": {
+        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+         "resourceName": {
+          "type": "string"
+         },
+         "logAnalytics": {
+          "type": "string"
+         }
+        },
+        "variables": {},
+        "resources": [
+         {
+          "type": "Microsoft.Network/virtualNetworks/providers/diagnosticSettings",
+          "apiVersion": "2017-05-01-preview",
+          "name": "[concat(parameters('resourceName'), '/', 'Microsoft.Insights/setbypolicy')]",
+          "location": "eastus2",
+          "dependsOn": [],
+          "properties": {
+           "workspaceId": "[parameters('logAnalytics')]",
+           "metrics": [
+            {
+             "category": "AllMetrics",
+             "enabled": true,
+             "retentionPolicy": {
+              "days": 0,
+              "enabled": false
+             },
+             "timeGrain": null
+            }
+           ],
+           "logs": [
+            {
+             "category": "VMProtectionAlerts",
+             "enabled": true
+            }
+           ]
+          }
+         }
+        ],
+        "outputs": {}
+       },
+       "parameters": {
+        "logAnalytics": {
+         "value": "[parameters('logAnalytics')]"
+        },
+        "resourceName": {
+         "value": "[field('name')]"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": "/providers/Microsoft.Management/managementGroups/PrimaryGroup/providers/Microsoft.Authorization/policyDefinitions/039b792d-198c-4885-89bb-88f16d74e371",
+ "type": "Microsoft.Authorization/policyDefinitions",
+ "name": "039b792d-198c-4885-89bb-88f16d74e371"
+}

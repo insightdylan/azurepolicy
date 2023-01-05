@@ -1,0 +1,110 @@
+{
+ "properties": {
+  "displayName": "Apply diagnostic settings for Virtual Machine Scale Sets - Log Analytics - Identity",
+  "policyType": "Custom",
+  "mode": "All",
+  "description": "This policy automatically deploys and enable diagnostic settings to Log Analytics",
+  "metadata": {
+   "category": "Monitoring",
+   "createdBy": "e2c5fc93-1ff5-4360-9ec4-9aae23f840e3",
+   "createdOn": "2022-05-19T14:40:16.5616144Z",
+   "updatedBy": "e2c5fc93-1ff5-4360-9ec4-9aae23f840e3",
+   "updatedOn": "2022-05-19T15:52:24.5886686Z"
+  },
+  "parameters": {
+   "logAnalytics": {
+    "type": "String",
+    "metadata": {
+     "displayName": "Log Analytics workspace",
+     "description": "Select the Log Analytics workspace from dropdown list",
+     "strongType": "omsWorkspace"
+    }
+   }
+  },
+  "policyRule": {
+   "if": {
+    "allOf": [
+     {
+      "field": "type",
+      "equals": "Microsoft.Compute/virtualMachineScaleSets"
+     }
+    ]
+   },
+   "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+     "type": "Microsoft.Insights/diagnosticSettings",
+     "name": "AtosDiagnosticRule-SendToLogAnalytics",
+     "roleDefinitionIds": [
+      "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+     ],
+     "existenceCondition": {
+      "allOf": [
+       {
+        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+        "equals": "True"
+       },
+       {
+        "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+        "matchInsensitively": "[parameters('logAnalytics')]"
+       }
+      ]
+     },
+     "deployment": {
+      "properties": {
+       "mode": "incremental",
+       "template": {
+        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+         "resourceName": {
+          "type": "string"
+         },
+         "logAnalytics": {
+          "type": "string"
+         }
+        },
+        "variables": {},
+        "resources": [
+         {
+          "type": "Microsoft.Compute/virtualMachineScaleSets/providers/diagnosticSettings",
+          "apiVersion": "2017-05-01-preview",
+          "name": "[concat(parameters('resourceName'), '/', 'Microsoft.Insights/AtosDiagnosticRule-SendToLogAnalytics')]",
+          "location": "eastus2",
+          "dependsOn": [],
+          "properties": {
+           "workspaceId": "[parameters('logAnalytics')]",
+           "metrics": [
+            {
+             "category": "AllMetrics",
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            }
+           ],
+           "logs": []
+          }
+         }
+        ],
+        "outputs": {}
+       },
+       "parameters": {
+        "logAnalytics": {
+         "value": "[parameters('logAnalytics')]"
+        },
+        "resourceName": {
+         "value": "[field('name')]"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": "/subscriptions/3f982b97-4ecf-4d3f-8597-84c5b5ac554d/providers/Microsoft.Authorization/policyDefinitions/3c86d6f8-a9af-4993-a0a9-ef9b2ddf8c5e",
+ "type": "Microsoft.Authorization/policyDefinitions",
+ "name": "3c86d6f8-a9af-4993-a0a9-ef9b2ddf8c5e"
+}

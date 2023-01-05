@@ -1,0 +1,172 @@
+{
+ "properties": {
+  "displayName": "Apply diagnostic settings for Cosmos DB - Log Analytics",
+  "policyType": "Custom",
+  "mode": "All",
+  "description": "This policy automatically deploys and enable diagnostic settings to Log Analytics",
+  "metadata": {
+   "category": "Monitoring",
+   "source": "AtosDCS",
+   "createdBy": "00352a8a-15af-471f-9ef1-fed9d3675958",
+   "createdOn": "2022-05-02T08:05:15.7215761Z",
+   "updatedBy": "00352a8a-15af-471f-9ef1-fed9d3675958",
+   "updatedOn": "2022-05-10T15:24:14.6072437Z"
+  },
+  "parameters": {
+   "logAnalytics": {
+    "type": "string",
+    "metadata": {
+     "displayName": "Log Analytics workspace",
+     "description": "Select the Log Analytics workspace from dropdown list",
+     "strongType": "omsWorkspace"
+    }
+   }
+  },
+  "policyRule": {
+   "if": {
+    "allOf": [
+     {
+      "field": "type",
+      "equals": "Microsoft.DocumentDB/databaseAccounts"
+     },
+     {
+      "field": "tags[AtosManaged]",
+      "exists": "true"
+     }
+    ]
+   },
+   "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+     "type": "Microsoft.Insights/diagnosticSettings",
+     "name": "AtosDiagnosticRule-SendToLogAnalytics",
+     "roleDefinitionIds": [
+      "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+     ],
+     "existenceCondition": {
+      "allOf": [
+       {
+        "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+        "equals": "True"
+       },
+       {
+        "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+        "matchInsensitively": "[parameters('logAnalytics')]"
+       }
+      ]
+     },
+     "deployment": {
+      "properties": {
+       "mode": "incremental",
+       "template": {
+        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+         "resourceName": {
+          "type": "string"
+         },
+         "logAnalytics": {
+          "type": "string"
+         }
+        },
+        "variables": {},
+        "resources": [
+         {
+          "type": "Microsoft.DocumentDB/databaseAccounts/providers/diagnosticSettings",
+          "apiVersion": "2017-05-01-preview",
+          "name": "[concat(parameters('resourceName'), '/', 'Microsoft.Insights/AtosDiagnosticRule-SendToLogAnalytics')]",
+          "location": "eastus2",
+          "dependsOn": [],
+          "properties": {
+           "workspaceId": "[parameters('logAnalytics')]",
+           "metrics": [
+            {
+             "category": "Requests",
+             "enabled": true,
+             "retentionPolicy": {
+              "days": 0,
+              "enabled": false
+             },
+             "timeGrain": null
+            }
+           ],
+           "logs": [
+            {
+             "category": "MongoRequests",
+             "categoryGroup": null,
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            },
+            {
+             "category": "DataPlaneRequests",
+             "categoryGroup": null,
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            },
+            {
+             "category": "QueryRuntimeStatistics",
+             "categoryGroup": null,
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            },
+            {
+             "category": "PartitionKeyStatistics",
+             "categoryGroup": null,
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            },
+            {
+             "category": "PartitionKeyRUConsumption",
+             "categoryGroup": null,
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            },
+            {
+             "category": "ControlPlaneRequests",
+             "categoryGroup": null,
+             "enabled": true,
+             "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+             }
+            }
+           ],
+           "logAnalyticsDestinationType": "Dedicated"
+          }
+         }
+        ],
+        "outputs": {}
+       },
+       "parameters": {
+        "logAnalytics": {
+         "value": "[parameters('logAnalytics')]"
+        },
+        "resourceName": {
+         "value": "[field('name')]"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": "/subscriptions/c627ea5f-b960-4162-acc4-00966f7fe4ba/providers/Microsoft.Authorization/policyDefinitions/cosmosDBs-diagnostic-settings-policyDef",
+ "type": "Microsoft.Authorization/policyDefinitions",
+ "name": "cosmosDBs-diagnostic-settings-policyDef"
+}
